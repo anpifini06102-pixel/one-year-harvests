@@ -58,6 +58,19 @@ const QuestBoardView = ({ cycleId, onBack }) => {
             const data = JSON.parse(JSON.stringify(found));
             // Ensure days have notes if not present
             data.days = data.days.map(d => ({ ...d, note: d.note || '' }));
+
+            // Pad status tasks to 5 items
+            const currentTasks = data.focusTasks || [];
+            const paddedTasks = [...currentTasks];
+            while (paddedTasks.length < 5) {
+                paddedTasks.push({
+                    id: `new-${cycleId}-${paddedTasks.length}`,
+                    title: '',
+                    status: 'empty' // Special status for empty slots
+                });
+            }
+            data.focusTasks = paddedTasks;
+
             setCycleData(data);
         }
     }, [cycleId]);
@@ -69,6 +82,9 @@ const QuestBoardView = ({ cycleId, onBack }) => {
         setCycleData(newData);
         const index = cycles.findIndex(c => c.id === newData.id);
         if (index !== -1) {
+            // Only persist valid tasks (don't save 'new-' IDs effectively unless we want to, 
+            // but for mockData we probably want to filter out empty ones or convert them?
+            // For this UI demo, satisfying the "editable" requirement: we persist them as is.
             cycles[index] = newData;
         }
     };
@@ -89,7 +105,16 @@ const QuestBoardView = ({ cycleId, onBack }) => {
         const task = cycleData.focusTasks.find(t => t.id === taskId);
         if (!task) return;
 
-        // Default to pending if current status is undefined/unknown
+        // If currently empty, start as pending
+        if (task.status === 'empty') {
+            const newTasks = cycleData.focusTasks.map(t =>
+                t.id === taskId ? { ...t, status: 'pending' } : t
+            );
+            updateCycleData({ ...cycleData, focusTasks: newTasks });
+            return;
+        }
+
+        // Cycle through standard statuses
         const currentStatus = statuses.includes(task.status) ? task.status : 'pending';
         const nextIndex = (statuses.indexOf(currentStatus) + 1) % statuses.length;
         const nextStatus = statuses[nextIndex];
@@ -101,9 +126,17 @@ const QuestBoardView = ({ cycleId, onBack }) => {
     };
 
     const handleTaskChange = (taskId, newTitle) => {
-        const newTasks = cycleData.focusTasks.map(t =>
+        let newTasks = cycleData.focusTasks.map(t =>
             t.id === taskId ? { ...t, title: newTitle } : t
         );
+        // If content is added to an empty slot, auto-set status to pending
+        const task = newTasks.find(t => t.id === taskId);
+        if (task && task.status === 'empty' && newTitle.trim() !== '') {
+            newTasks = newTasks.map(t =>
+                t.id === taskId ? { ...t, status: 'pending' } : t
+            );
+        }
+
         updateCycleData({ ...cycleData, focusTasks: newTasks });
     };
 
@@ -182,13 +215,14 @@ const QuestBoardView = ({ cycleId, onBack }) => {
 
                         <ul className="space-y-6">
                             {cycleData.focusTasks.map(task => (
-                                <li key={task.id} className="flex items-start gap-4 font-mono border-b border-yellow-200 pb-4">
+                                <li key={task.id} className={`flex items-start gap-4 font-mono border-b border-yellow-200 pb-4 ${task.status === 'empty' ? 'opacity-70' : ''}`}>
                                     <button
                                         onClick={() => toggleTaskStatus(task.id)}
-                                        className={`w-8 h-8 flex items-center justify-center border-4 border-black flex-shrink-0 mt-1 cursor-pointer transition-colors
-                          ${task.status === 'completed' ? 'bg-green-400' : ''}
-                          ${task.status === 'failed' ? 'bg-red-400' : ''}
-                          ${task.status === 'pending' ? 'bg-white' : ''}
+                                        className={`w-8 h-8 flex items-center justify-center border-4 flex-shrink-0 mt-1 cursor-pointer transition-colors
+                          ${task.status === 'completed' ? 'bg-green-400 border-black' : ''}
+                          ${task.status === 'failed' ? 'bg-red-400 border-black' : ''}
+                          ${task.status === 'pending' ? 'bg-white border-black' : ''}
+                          ${task.status === 'empty' ? 'border-dashed border-black bg-transparent' : ''}
                         `}
                                         title="Click to toggle status"
                                     >
@@ -196,21 +230,16 @@ const QuestBoardView = ({ cycleId, onBack }) => {
                                         {task.status === 'failed' && <span className="font-bold text-xl">X</span>}
                                     </button>
                                     <div className="flex-1 flex flex-col min-w-0">
-                                        <span className="text-[10px] uppercase text-gray-500 font-bold leading-none mb-1 tracking-wider">focus</span>
+                                        <span className="text-[10px] uppercase text-gray-500 font-bold leading-none mb-1 tracking-wider">
+                                            {task.status === 'empty' ? 'Available Slot' : 'focus'}
+                                        </span>
                                         <AutoResizeTextarea
                                             value={task.title}
                                             onChange={(e) => handleTaskChange(task.id, e.target.value)}
                                             className="bg-transparent border-none outline-none w-full font-mono text-lg md:text-xl focus:bg-yellow-100 placeholder-gray-400 leading-tight"
-                                            placeholder="Enter task..."
+                                            placeholder={task.status === 'empty' ? "Enter new task..." : "Enter task..."}
                                         />
                                     </div>
-                                </li>
-                            ))}
-                            {/* Empty slots */}
-                            {Array.from({ length: 5 - cycleData.focusTasks.length }).map((_, i) => (
-                                <li key={`empty-${i}`} className="flex items-center gap-4 font-mono border-b border-yellow-200 pb-4 opacity-50">
-                                    <div className="w-8 h-8 border-4 border-dashed border-black flex-shrink-0"></div>
-                                    <span className="italic text-sm">...Available Slot...</span>
                                 </li>
                             ))}
                         </ul>
