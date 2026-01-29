@@ -6,6 +6,7 @@ import { getCurrentCycle } from '../utils/dateUtils';
 const AlmanacView = ({ onSelectCycle }) => {
     // Real-time: Calculate current cycle based on today
     const { cycle: currentCycleId } = getCurrentCycle();
+    // const currentCycleId = 1; // Hardcoded for safety during debug
 
     return (
         <div className="flex flex-col items-center">

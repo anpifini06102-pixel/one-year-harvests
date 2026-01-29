@@ -4,6 +4,8 @@ import { getCurrentCycle } from '../utils/dateUtils';
 
 const Layout = ({ children, currentView, setView }) => {
     const { cycle, day } = getCurrentCycle();
+    // const cycle = 1;
+    // const day = 1;
 
     return (
         <div className="min-h-screen bg-wood-dark p-4 flex flex-col items-center justify-center font-pixel">
@@ -31,6 +33,12 @@ const Layout = ({ children, currentView, setView }) => {
                             className={`px-3 py-1 border-2 ${currentView === 'harvest' ? 'bg-wood-light text-wood-dark border-wood-dark' : 'bg-wood text-wood-light border-wood-light hover:bg-wood/80'} shadow-pixel-sm transition-transform active:translate-y-1`}
                         >
                             The Field
+                        </button>
+                        <button
+                            onClick={() => setView('statistics')}
+                            className={`px-3 py-1 border-2 ${currentView === 'statistics' ? 'bg-wood-light text-wood-dark border-wood-dark' : 'bg-wood text-wood-light border-wood-light hover:bg-wood/80'} shadow-pixel-sm transition-transform active:translate-y-1`}
+                        >
+                            Statistics
                         </button>
                     </nav>
                 </header>
