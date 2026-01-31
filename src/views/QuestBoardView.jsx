@@ -98,8 +98,9 @@ const QuestBoardView = ({ cycleId, onBack }) => {
                 }
             }));
 
-            const existingCount = mappedDbTasks.length;
-            const fullList = [...mappedDbTasks];
+            const clampedDbTasks = mappedDbTasks.slice(0, 5);
+            const existingCount = clampedDbTasks.length;
+            const fullList = [...clampedDbTasks];
 
             for (let i = existingCount; i < 5; i++) {
                 fullList.push({
@@ -320,7 +321,7 @@ const QuestBoardView = ({ cycleId, onBack }) => {
             ) : (
                 <div className="flex flex-col gap-8">
                     <div className="flex flex-col md:flex-row gap-8 items-start">
-                        <div className="w-full md:w-1/3 bg-yellow-50 p-6 shadow-pixel rotate-1 border-2 border-wood-dark relative text-wood-dark self-stretch">
+                        <div className="w-full md:w-1/3 bg-yellow-50 p-6 shadow-pixel border-2 border-wood-dark relative text-wood-dark self-stretch">
                             <div className="absolute -top-3 left-1/2 -translate-x-1/2 text-red-800">
                                 <Pin fill="#8b0000" size={32} />
                             </div>
@@ -387,7 +388,7 @@ const QuestBoardView = ({ cycleId, onBack }) => {
                             </ul>
                         </div>
 
-                        <div className="w-full md:w-2/3 bg-white p-6 shadow-pixel -rotate-1 border-2 border-wood-dark relative">
+                        <div className="w-full md:w-2/3 bg-white p-6 shadow-pixel border-2 border-wood-dark relative">
                             <h3 className="text-xl mb-6 bg-wood-dark text-wood-light inline-block px-3 py-1">Growth Log</h3>
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                                 {cycleData.days.map((day, index) => (
